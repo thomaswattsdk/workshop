@@ -11,7 +11,16 @@ If the platform is Windows, or the working directory is a `\\wsl...` or drive-le
 - **A project is a folder here with its own `.git`.** It holds its own code and its own record (`CLAUDE.md`, `docs/`: ADRs, build log, handovers). The list of projects is never typed here: look at the folders, and at the MapOfContent Path Registry for what each is. Folders without a `.git` are not projects.
 - **Separate:** a project's decisions, rules and history live in its repository and are committed there. A change to a project's files is committed in that project's repository, never in the platform's.
 - **Readable across:** any session may read any project's `CLAUDE.md`, `docs/` and newest handover to answer a question or to build on its work. Work items are read and written through the Work Ecosystem core (`work-ecosystem-core`, its `docs/command-line.md`), never by opening the files. Write in a project only when the work in hand is about that project; a binding or fix that must land in another project is committed there, saying which project it came from.
-- **No project is assumed at session start.** Do not pre-read anything. When the conversation turns to a named project, run that project's Session Reset (newest handover, glossary, ADRs) before advising.
+- **Every session has access to every project.** This is Thomas's work-plane; git does the separating (a commit per step, in the repository of the project worked on). No sandbox or permission walls between projects.
+
+## Starting a session
+
+Thomas does not carry resume prompts between sessions; the record does. After the entry-point check and before anything else, ask in prose: **"What would you like to work on today?"** Under it, list the projects as they are right now, read live, never from memory: one line each with its name, its phase (from its `CLAUDE.md`) and where it stands (the opening of its newest handover), most recently touched first, then the offer to **start a new project**. No project is assumed and nothing else is pre-read. Whatever Thomas answers is enough to begin: a project's name, a description, "the last one".
+
+- **A project chosen:** that choice sets the session up. Read the project's `CLAUDE.md`, run its Session Reset from the record (newest handover, glossary, ADRs, decision map, `git status`), then say in two or three sentences where the work stands and what its next step is, and offer to start it. From then on the project is the **focus**: work, commits and rules are its own. Other projects stay readable, and a change that must land in another project is committed there, saying where it came from.
+- **A new project:** follow *Making a project* below, beginning with the MVP Pitch.
+- **Work that spans projects, or no project:** say so and proceed with the platform as the focus.
+- **The focus can change mid-session** when Thomas names another project: run that project's Session Reset before advising on it.
 
 ## Tools: available to every project
 

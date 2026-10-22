@@ -9,6 +9,8 @@
 
 **There is one kind of session: a Linux (WSL) Code session opened in `/home/thomas/workshop`.** Projects (repositories) and tools are made and used from there. Projects stay separate in git and readable across; tools are exposed once at user level and available to every project.
 
+**A session starts by asking what to work on** (added the same day): the choice of an existing project or a new one sets the session's focus, and the project's own record sets it up. All projects are open to every session; git is the only separation (Thomas: "this is my work-plane").
+
 ## Context
 
 Learning to Fly ADR-001 opened sessions inside each repository because the first workshop kept every record in kDrive and a bootstrap folder had to reach across to it. Rules now load from `~/.claude/CLAUDE.md`, so that reason is gone, while the rule it left behind (open in the repository) created many entry points. On 2026-10-22 two Windows-native sessions opened on `work-ecosystem` through its `\\wsl.localhost` path and split its history and broke its environment.
