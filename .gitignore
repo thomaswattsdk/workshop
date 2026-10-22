@@ -1,0 +1,5 @@
+# The platform repository tracks only its own files; each project is its own repository.
+/*
+!/.gitignore
+!/CLAUDE.md
+!/docs/
