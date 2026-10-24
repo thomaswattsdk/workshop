@@ -46,6 +46,7 @@ run "visual-grill-board: format"        visual-grill-board    npm run --silent f
 echo "Guardrails"
 run "guardrails: shell guard tests"     guardrails python3 -I test_workshop_guard.py
 run "guardrails: edit guard tests"      guardrails python3 -I test_workshop_edit_guard.py
+run "guardrails: push script tests"     guardrails python3 -I test_workshop_push.py
 
 echo "Secret scan (tracked files)"
 for r in workbench work-ecosystem work-ecosystem-core retro visual-grill-board hello-app grill-copies; do

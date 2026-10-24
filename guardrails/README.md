@@ -7,8 +7,8 @@ The machine-wide rules that sit under every Claude Code session on this computer
 | `managed-settings.json` | The sandbox, the permission rules that always ask, and the two hooks below. Written by the owner of the machine; a session cannot change it. |
 | `workshop-guard.py` | Before every shell command: refuses deletes that reach outside the workshop or hide in a roundabout form, Docker given too much, and a push that is not a plain push to GitHub. A tripwire, not a wall. |
 | `workshop-edit-guard.py` | Before every Edit, Write and NotebookEdit: the "no file change without permission" rule as code. Allows a file git already holds with no uncommitted changes; asks about everything else. |
-| `workshop-push` | The one sanctioned way to send a project to GitHub from a session: `/etc/claude-code/workshop-push <project>`. Behind an approval prompt that shows the exact command. |
-| `test_workshop_guard.py`, `test_workshop_edit_guard.py` | The tests. Standard library only. |
+| `workshop-push` | The one way to send a project to GitHub from a session: `/etc/claude-code/workshop-push <project>` (a project folder, `workshop` for the platform repository, or `claude-os`). Behind an approval prompt that shows the exact command. A plain `git push` no longer runs in a session: it is not excluded from the sandbox, where the GitHub token is hidden. |
+| `test_workshop_guard.py`, `test_workshop_edit_guard.py`, `test_workshop_push.py` | The tests. Standard library only. |
 | `install.sh`, `verify-install.sh` | Install into `/etc/claude-code` (sudo, tests first, backs up what it replaces); check that the installed copies match. |
 | `previous-*` | The files from before 2026-09-25, kept as the way back for that change. Git history now does this job. |
 

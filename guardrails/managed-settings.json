@@ -181,8 +181,6 @@
     "excludedCommands": [
       "docker",
       "docker *",
-      "git push",
-      "git push *",
       "/etc/claude-code/workshop-push",
       "/etc/claude-code/workshop-push *"
     ],

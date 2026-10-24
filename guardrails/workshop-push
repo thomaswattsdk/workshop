@@ -2,7 +2,7 @@
 """Send one workshop project (or claude-os) to its GitHub remote.
 
 Usage: workshop-push <name>
-  <name> is a folder under /home/thomas/workshop, or "claude-os".
+  <name> is a folder under /home/thomas/workshop, "workshop" (the platform repository itself), or "claude-os".
 
 This is the one command a session may use to send work off the machine. It
 runs outside the sandbox (like Docker), behind an approval prompt that shows
@@ -25,7 +25,7 @@ import subprocess
 import sys
 
 WORKSHOP = "/home/thomas/workshop"
-OUTSIDE = {"claude-os": "/home/thomas/claude-os"}
+OUTSIDE = {"claude-os": "/home/thomas/claude-os", "workshop": WORKSHOP}  # the OS repository and the platform repository itself
 NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 REMOTE = re.compile(r"^https://github\.com/thomaswattsdk/[\w.-]+?(\.git)?/?$")
 

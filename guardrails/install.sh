@@ -12,6 +12,7 @@ stamp="$(date +%Y-%m-%d-%H%M)"
 echo "Running the tests ..."
 python3 -I "$src/test_workshop_guard.py" > /dev/null
 python3 -I "$src/test_workshop_edit_guard.py" > /dev/null
+python3 -I "$src/test_workshop_push.py" > /dev/null
 echo "Tests pass."
 
 mkdir -p "$dst"
