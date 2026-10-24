@@ -38,6 +38,11 @@ if [ "$quick" = 0 ]; then
   run "work-ecosystem: browser tests"   work-ecosystem      node --test --test-concurrency=1 tests/*.test.ts
 fi
 
+echo "Formatting (Prettier)"
+run "work-ecosystem-core: format"       work-ecosystem-core   node node_modules/prettier/bin/prettier.cjs --check "core/*.ts"
+run "work-ecosystem: format"            work-ecosystem/server node node_modules/prettier/bin/prettier.cjs --check "*.ts" "../tests/*.ts" "../web/js/*.js"
+run "visual-grill-board: format"        visual-grill-board    npm run --silent format:check
+
 echo "Guardrails"
 run "guardrails: shell guard tests"     guardrails python3 -I test_workshop_guard.py
 run "guardrails: edit guard tests"      guardrails python3 -I test_workshop_edit_guard.py
