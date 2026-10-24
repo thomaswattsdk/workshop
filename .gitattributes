@@ -1,0 +1,10 @@
+# One line ending everywhere: files are stored with LF and checked out as they are.
+# (A Windows session reaching into these folders once split a repository's history over line endings.)
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.pdf binary
+*.zip binary

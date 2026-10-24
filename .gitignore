@@ -4,3 +4,6 @@
 !/CLAUDE.md
 !/docs/
 !/guardrails/
+!/tools/
+!/.gitattributes
+!/.editorconfig
