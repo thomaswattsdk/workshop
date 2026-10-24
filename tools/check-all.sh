@@ -30,7 +30,7 @@ echo "Tests and type checks"
 run "work-ecosystem-core: tests"        work-ecosystem-core node --test core/*.test.ts
 run "work-ecosystem-core: type check"   work-ecosystem-core $TSC_CORE -p core/tsconfig.json
 run "workbench: tests"                  workbench           node --test core/*.test.ts
-run "workbench: type check"             workbench           node ../work-ecosystem-core/node_modules/typescript/bin/tsc -p . --noEmit
+run "workbench: type check"             workbench           node ../work-ecosystem-core/node_modules/typescript/bin/tsc -p tsconfig.check.json --noEmit
 run "work-ecosystem server: tests"      work-ecosystem/server node --test *.test.ts
 run "work-ecosystem server: type check" work-ecosystem/server $TSC_CORE -p tsconfig.json
 run "visual-grill-board: tests"         visual-grill-board  node --test "tests/**/*.test.mjs"
