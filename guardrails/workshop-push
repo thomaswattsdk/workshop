@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+"""Send one workshop project (or claude-os) to its GitHub remote.
+
+Usage: workshop-push <name>
+  <name> is a folder under /home/thomas/workshop, or "claude-os".
+
+This is the one command a session may use to send work off the machine. It
+runs outside the sandbox (like Docker), behind an approval prompt that shows
+the exact command, and the pre-action check (workshop-guard.py) lets through
+only this script with exactly one plain name after it.
+
+It refuses, before anything is sent:
+  - a name that is not a plain folder name, or a folder that is not a
+    workshop project (no .git), or one outside the workshop and claude-os
+  - git set to rewrite remote addresses
+  - a remote that is not https://github.com/thomaswattsdk/<repo>
+  - a detached head
+It never forces: a push git would reject stays rejected. It sets no tracking
+branch (the sandbox protects .git/config); Thomas does that once, himself.
+It is a tripwire, not a wall: the token's scope on GitHub is the real limit.
+"""
+import os
+import re
+import subprocess
+import sys
+
+WORKSHOP = "/home/thomas/workshop"
+OUTSIDE = {"claude-os": "/home/thomas/claude-os"}
+NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+REMOTE = re.compile(r"^https://github\.com/thomaswattsdk/[\w.-]+?(\.git)?/?$")
+
+
+def stop(message):
+    print("workshop-push: " + message, file=sys.stderr)
+    sys.exit(2)
+
+
+def git(path, *args):
+    out = subprocess.run(["git", "-C", path] + list(args), capture_output=True, text=True, timeout=30)
+    return out.returncode, out.stdout.strip()
+
+
+def main():
+    if len(sys.argv) != 2 or not NAME.match(sys.argv[1]):
+        stop("usage: workshop-push <project folder name>")
+    name = sys.argv[1]
+    path = OUTSIDE.get(name) or os.path.join(WORKSHOP, name)
+    path = os.path.realpath(path)
+    allowed = list(OUTSIDE.values()) + [os.path.realpath(os.path.join(WORKSHOP, name))]
+    if path not in allowed or not os.path.isdir(os.path.join(path, ".git")):
+        stop(name + " is not a workshop project or claude-os.")
+
+    code, rewrites = git(path, "config", "--get-regexp", r"^url\..*\.(pushinsteadof|insteadof)$")
+    if code == 0 and rewrites:
+        stop("git is set to rewrite remote addresses, so the target cannot be trusted.")
+
+    code, urls = git(path, "remote", "get-url", "--push", "--all", "origin")
+    lines = [u for u in urls.splitlines() if u]
+    if code != 0 or len(lines) != 1:
+        stop("origin must exist and have exactly one push address.")
+    if not REMOTE.match(lines[0]):
+        stop("origin must be https://github.com/thomaswattsdk/<repo>, not " + lines[0])
+
+    code, branch = git(path, "symbolic-ref", "--short", "HEAD")
+    if code != 0 or not branch:
+        stop("the repository is on a detached head.")
+
+    code, pending = git(path, "log", "--oneline", "origin/" + branch + "..HEAD")
+    print("workshop-push: " + name + " -> " + lines[0] + " (" + branch + ")")
+    print(pending if code == 0 and pending else "(no unsent commits known locally)")
+    sys.stdout.flush()
+
+    env = dict(os.environ, GIT_TERMINAL_PROMPT="0")
+    result = subprocess.run(["git", "-C", path, "push", "origin", branch], env=env)
+    sys.exit(result.returncode)
+
+
+if __name__ == "__main__":
+    main()
