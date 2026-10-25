@@ -57,7 +57,7 @@ class EditGuard(unittest.TestCase):
     def ask(self, path, tool="Edit", cwd=None):
         payload = {"tool_name": tool, "cwd": cwd or self.proj, "tool_input": {"file_path": path}}
         out = subprocess.run([sys.executable, "-I", HOOK], input=json.dumps(payload), capture_output=True, text=True, timeout=20,
-                             env=dict(os.environ, WORKSHOP_GUARD_ROOT=self.root))
+                             env=dict(os.environ, WORKSHOP_GUARD_ROOT=self.root, ZONE_LOG=os.devnull))
         self.assertEqual(out.returncode, 0, out.stderr)
         return json.loads(out.stdout)["hookSpecificOutput"]["permissionDecision"] if out.stdout.strip() else "silent"
 
@@ -98,6 +98,145 @@ class EditGuard(unittest.TestCase):
         self.assertEqual(self.ask(os.path.join(self.proj, "a.md"), "Read"), "silent")
         out = subprocess.run([sys.executable, "-I", HOOK], input="not json", capture_output=True, text=True)
         self.assertEqual((out.returncode, out.stdout), (0, ""))
+
+
+class ZoneGuard(unittest.TestCase):
+    """ADR-002: the knowledge zones in kDrive and the OS repository (layers of the Difference Engine)."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+        base = os.path.realpath(cls.tmp.name)
+        cls.kd = os.path.join(base, "kdrive")
+        cls.hist = os.path.join(base, "history.git")
+        cls.os_root = os.path.join(base, "claude-os")
+        cls.log = os.path.join(base, "state", "zone-decisions.jsonl")
+        cls.ci = os.path.join(cls.kd, "Knowledge base", "Code Intelligence.md")
+        put(cls.ci, "line1\nline2\n")
+        put(os.path.join(cls.kd, "Knowledge base", "Finances", "payslip.pdf"), "pdf\n")
+        put(os.path.join(cls.kd, "Knowledge base", "Project Framework", "framework.html"), "<html>\n")
+        put(os.path.join(cls.kd, "Obsidian", "Watts Obsidian", "Inbox", "old.md"), "old\n")
+        put(os.path.join(cls.kd, "Obsidian", "Watts Obsidian", "Areas", "note.md"), "note\n")
+        put(os.path.join(cls.kd, "Claude outputs", "report.md"), "report\n")
+        put(os.path.join(cls.kd, "Claude Cowork OS", "instructions.md"), "frozen\n")
+        sh(base, "git", "init", "-q", "--bare", cls.hist)
+        hist = ["git", "--git-dir", cls.hist, "--work-tree", cls.kd]
+        sh(base, *hist, "config", "commit.gpgsign", "false")
+        sh(base, *hist, "add", "Knowledge base/Code Intelligence.md")
+        sh(base, *hist, "commit", "-q", "-m", "baseline")
+        os.makedirs(cls.os_root)
+        sh(cls.os_root, "git", "init", "-q")
+        sh(cls.os_root, "git", "config", "commit.gpgsign", "false")
+        for rel in ("CLAUDE.md", "instructions.md", "Memory.md", "Skills/s/SKILL.md", "Workshop/backlog.md", "Workshop/adr/a.md",
+                    "Handovers/old.md"):
+            put(os.path.join(cls.os_root, rel), "a\nb\n")
+        sh(cls.os_root, "git", "add", ".")
+        sh(cls.os_root, "git", "commit", "-q", "-m", "os")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def env(self, **extra):
+        env = dict(os.environ, WORKSHOP_GUARD_ROOT=os.path.join(self.tmp.name, "workshop"), KDRIVE_GUARD_ROOT=self.kd,
+                   KDRIVE_GUARD_HISTORY=self.hist, OS_GUARD_ROOT=self.os_root, ZONE_LOG=self.log)
+        env.update(extra)
+        return env
+
+    def ask(self, path, tool="Write", env=None, **tool_input):
+        payload = {"tool_name": tool, "cwd": self.kd, "tool_input": dict(tool_input, file_path=path)}
+        out = subprocess.run([sys.executable, "-I", HOOK], input=json.dumps(payload), capture_output=True, text=True, timeout=20,
+                             env=env or self.env())
+        self.assertEqual(out.returncode, 0, out.stderr)
+        return json.loads(out.stdout)["hookSpecificOutput"]["permissionDecision"] if out.stdout.strip() else "silent"
+
+    def vault(self, *parts):
+        return os.path.join(self.kd, "Obsidian", "Watts Obsidian", *parts)
+
+    # New files only: records, the vault's Inbox, Claude's own output folders.
+    def test_a_new_note_in_the_vault_inbox_is_allowed(self):
+        self.assertEqual(self.ask(self.vault("Inbox", "new.md"), content="x\n"), "allow")
+
+    def test_an_existing_vault_note_is_never_edited_without_asking(self):
+        self.assertEqual(self.ask(self.vault("Inbox", "old.md"), "Edit", old_string="old", new_string="old more"), "ask")
+        self.assertEqual(self.ask(self.vault("Areas", "note.md"), content="x"), "ask")
+
+    def test_a_new_note_outside_the_inbox_asks(self):
+        self.assertEqual(self.ask(self.vault("Areas", "new.md"), content="x"), "ask")
+
+    def test_a_new_record_file_is_allowed_but_an_existing_one_is_never_overwritten(self):
+        self.assertEqual(self.ask(os.path.join(self.kd, "Knowledge base", "Finances", "new.pdf"), content="x"), "allow")
+        self.assertEqual(self.ask(os.path.join(self.kd, "Knowledge base", "Finances", "payslip.pdf"), content="x"), "ask")
+        self.assertEqual(self.ask(os.path.join(self.kd, "Knowledge base", "Project Framework", "framework.html"), content="x"), "ask")
+
+    def test_claude_output_folders_take_new_files_only(self):
+        self.assertEqual(self.ask(os.path.join(self.kd, "Claude outputs", "new.md"), content="x"), "allow")
+        self.assertEqual(self.ask(os.path.join(self.kd, "Claude outputs", "report.md"), content="x"), "ask")
+
+    def test_the_frozen_cowork_copy_and_unlisted_kdrive_paths_ask(self):
+        self.assertEqual(self.ask(os.path.join(self.kd, "Claude Cowork OS", "new.md"), content="x"), "ask")
+        self.assertEqual(self.ask(os.path.join(self.kd, "Projects", "p", "new.md"), content="x"), "ask")
+        self.assertEqual(self.ask(self.kd + "/.." * 30 + "/etc/outside.md", content="x"), "ask")
+
+    # Boundary guides: additions only, history held, nothing uncommitted.
+    def test_adding_an_entry_to_a_living_guide_is_allowed(self):
+        self.assertEqual(self.ask(self.ci, "Edit", old_string="line2\n", new_string="line2\nnew entry\n"), "allow")
+        self.assertEqual(self.ask(self.ci, "Write", content="line1\nline2\nappended\n"), "allow")
+
+    def test_revising_or_removing_existing_guide_text_asks(self):
+        self.assertEqual(self.ask(self.ci, "Edit", old_string="line1", new_string="changed"), "ask")
+        self.assertEqual(self.ask(self.ci, "Edit", old_string="line1\n", new_string=""), "ask")
+        self.assertEqual(self.ask(self.ci, "Write", content="something else\n"), "ask")
+
+    def test_a_multi_edit_is_allowed_only_if_every_edit_adds(self):
+        add = {"old_string": "line2\n", "new_string": "line2\nmore\n"}
+        revise = {"old_string": "line1", "new_string": "X"}
+        self.assertEqual(self.ask(self.ci, "MultiEdit", edits=[add]), "allow")
+        self.assertEqual(self.ask(self.ci, "MultiEdit", edits=[add, revise]), "ask")
+
+    def test_a_guide_with_uncommitted_changes_asks(self):
+        original = open(self.ci).read()
+        try:
+            put(self.ci, original + "uncommitted\n")
+            self.assertEqual(self.ask(self.ci, "Edit", old_string="line2\n", new_string="line2\nx\n"), "ask")
+        finally:
+            put(self.ci, original)
+
+    def test_a_guide_whose_history_is_not_held_asks(self):
+        env = self.env(KDRIVE_GUARD_HISTORY=os.path.join(self.tmp.name, "no-such-history.git"))
+        self.assertEqual(self.ask(self.ci, "Edit", env=env, old_string="line2\n", new_string="line2\nx\n"), "ask")
+
+    # The OS repository: hard rules and core guides ask; living guides take additions.
+    def test_the_hard_rules_and_core_guides_in_the_os_repository_ask(self):
+        for rel in ("CLAUDE.md", "instructions.md", "Workshop/adr/a.md"):
+            self.assertEqual(self.ask(os.path.join(self.os_root, rel), "Edit", old_string="a\n", new_string="a\nmore\n"), "ask", rel)
+
+    def test_living_guides_in_the_os_repository_take_additions_only(self):
+        for rel in ("Memory.md", "Skills/s/SKILL.md", "Workshop/backlog.md"):
+            path = os.path.join(self.os_root, rel)
+            self.assertEqual(self.ask(path, "Edit", old_string="b\n", new_string="b\nadded\n"), "allow", rel)
+            self.assertEqual(self.ask(path, "Edit", old_string="a\n", new_string="z\n"), "ask", rel)
+
+    def test_a_new_handover_is_allowed_but_an_existing_one_asks(self):
+        self.assertEqual(self.ask(os.path.join(self.os_root, "Handovers", "2026-10-25 new.md"), content="x"), "allow")
+        self.assertEqual(self.ask(os.path.join(self.os_root, "Handovers", "old.md"), "Edit", old_string="a", new_string="a b"), "ask")
+
+    # The log the Observer reads (Difference Engine, tenet 7).
+    def test_every_zone_decision_is_logged_and_a_broken_log_changes_nothing(self):
+        before = open(self.log).read().count("\n") if os.path.exists(self.log) else 0
+        self.ask(self.vault("Inbox", "logged.md"), content="x")
+        self.ask(self.vault("Areas", "note.md"), content="x")
+        lines = [json.loads(line) for line in open(self.log).read().splitlines()][before:]
+        self.assertEqual([entry["decision"] for entry in lines], ["allow", "ask"])
+        self.assertTrue(all({"time", "path", "tool", "zone", "reason"} <= set(entry) for entry in lines))
+        env = self.env(ZONE_LOG="/proc/no-such-place/log.jsonl")
+        self.assertEqual(self.ask(self.vault("Inbox", "logged2.md"), env=env, content="x"), "allow")
+
+    def test_paths_in_no_zone_are_not_logged(self):
+        before = open(self.log).read() if os.path.exists(self.log) else ""
+        self.ask("/etc/hosts", "Edit", old_string="a", new_string="b")
+        after = open(self.log).read() if os.path.exists(self.log) else ""
+        self.assertEqual(before, after)
 
 
 if __name__ == "__main__":
