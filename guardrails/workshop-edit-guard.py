@@ -40,24 +40,15 @@ KDRIVE = os.environ.get("KDRIVE_GUARD_ROOT") or "/mnt/d/Claude CoWork"
 KDRIVE_HISTORY = os.environ.get("KDRIVE_GUARD_HISTORY") or os.path.join(HOME, ".local/share/workshop/kdrive-history.git")
 OS_ROOT = os.environ.get("OS_GUARD_ROOT") or "/home/thomas/claude-os"
 ZONE_LOG = os.environ.get("ZONE_LOG") or os.path.join(HOME, ".local/state/workshop/zone-decisions.jsonl")
-# Rules per root, first match wins; a path that matches none asks. Paths are relative to the root.
-KDRIVE_RULES = (
-    ("Claude Cowork OS", "ask"),
-    ("Knowledge base/Code Intelligence.md", "add"),
-    ("Knowledge base", "new"),
-    ("Obsidian/Watts Obsidian/Inbox", "new"),
-    ("Obsidian", "ask"),
-    ("Claude outputs", "new"),
-    ("Sweeps", "new"),
-    ("Inbox for Claude", "new"),
-)
-OS_RULES = (
-    ("Skills", "add"),
-    ("Memory.md", "add"),
-    ("Memory-log.md", "add"),
-    ("Workshop/backlog.md", "add"),
-    ("Handovers", "new"),
-)
+# Rules per root, read from zones.json beside this file (first match wins; a path that matches none asks).
+# If the file cannot be read, no rule matches and everything in the roots asks.
+try:
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "zones.json"), encoding="utf-8") as _fh:
+        _zones = json.load(_fh)
+except Exception:
+    _zones = {}
+KDRIVE_RULES = tuple(tuple(r) for r in _zones.get("kdrive", ()))
+OS_RULES = tuple(tuple(r) for r in _zones.get("os", ()))
 SCRATCH = ("/tmp/claude",)
 # Files that govern every session: never changed without asking, even though git holds them.
 PROTECTED = ("guardrails", "CLAUDE.md")  # relative to the workshop folder

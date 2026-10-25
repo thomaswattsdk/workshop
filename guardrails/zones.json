@@ -1,0 +1,20 @@
+{
+  "_about": "Which part of the knowledge setup is in which layer (ADR-002, after the Difference Engine). Paths are relative to the root named in workshop-edit-guard.py. First match wins; a path that matches none asks. Kinds: new = new files only; add = additions to a living guide (history held, nothing uncommitted); ask = always asks. Protected like the rest of guardrails/.",
+  "kdrive": [
+    ["Claude Cowork OS", "ask"],
+    ["Knowledge base/Code Intelligence.md", "add"],
+    ["Knowledge base", "new"],
+    ["Obsidian/Watts Obsidian/Inbox", "new"],
+    ["Obsidian", "ask"],
+    ["Claude outputs", "new"],
+    ["Sweeps", "new"],
+    ["Inbox for Claude", "new"]
+  ],
+  "os": [
+    ["Skills", "add"],
+    ["Memory.md", "add"],
+    ["Memory-log.md", "add"],
+    ["Workshop/backlog.md", "add"],
+    ["Handovers", "new"]
+  ]
+}
