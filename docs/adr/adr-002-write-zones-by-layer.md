@@ -41,7 +41,7 @@ The hard rules were written for a setting with no history, and the library was w
 ## Test
 
 1. A new note in the vault `Inbox` is written with no prompt; an edit to an existing vault note asks.
-2. A new snapshot in the Code archive is written with no prompt and carries its header; an attempt to overwrite a PDF in the Knowledge base is refused.
+2. A new snapshot in the Code archive is written with no prompt and carries its header; an attempt to overwrite an existing file (a PDF, say) in the Knowledge base asks first, and the hook logs the "ask" (tested 2026-10-25).
 3. A new entry in the Code Intelligence skill is committed, appears on the "not yet ticked" list, and is reverted from git on request; a revision of an existing entry asks first.
 4. No instruction, skill or template is loaded from the Knowledge base: a search of `claude-os` and `workshop` for "Knowledge base" finds only records and snapshots.
 5. The Observer lists all of the above after the session and flags a deliberate out-of-zone write.
