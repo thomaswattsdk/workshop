@@ -17,11 +17,12 @@ Knowledge zones (ADR-002, after the Difference Engine's layers). Two more roots 
 decision in them is appended to a log that the Observer reads (tenet 7: a check outside the loop that made the change):
 
   new    a file that does not exist yet is allowed, an existing one asks  (records, the vault's Inbox, Claude's output folders)
-  add    a living guide: allowed when the edit only adds text (the old text stays whole inside the new), git holds the file's
-         history and it has no uncommitted changes; a new file is allowed; revising or removing existing text asks
+  add    a living guide in a git repository (the OS repository): allowed when the edit only adds text (the old text stays
+         whole inside the new), git holds the file and it has no uncommitted changes; a new file is allowed; revising or
+         removing existing text asks
   ask    everything else in the root (hard rules, core guides, the frozen Cowork copy, the rest of kDrive)
 
-The kDrive root keeps its history in a git directory in WSL, outside the folder kDrive watches; the OS repository uses its own.
+The library (kDrive root) holds records, not logic, so it has no "add" zone and no history store (ADR-002).
 
 It answers with a decision only for those cases. On any error it says nothing, so the normal permission rules apply.
 Deletion by overwriting is covered the same way: only a clean, tracked file can be replaced without asking, and git has it.
@@ -37,7 +38,6 @@ WORKSHOP = os.environ.get("WORKSHOP_GUARD_ROOT") or "/home/thomas/workshop"
 # The knowledge zones. The environment variables override the places for the tests only.
 HOME = os.path.expanduser("~")
 KDRIVE = os.environ.get("KDRIVE_GUARD_ROOT") or "/mnt/d/Claude CoWork"
-KDRIVE_HISTORY = os.environ.get("KDRIVE_GUARD_HISTORY") or os.path.join(HOME, ".local/share/workshop/kdrive-history.git")
 OS_ROOT = os.environ.get("OS_GUARD_ROOT") or "/home/thomas/claude-os"
 ZONE_LOG = os.environ.get("ZONE_LOG") or os.path.join(HOME, ".local/state/workshop/zone-decisions.jsonl")
 # Rules per root, read from zones.json beside this file (first match wins; a path that matches none asks).
@@ -107,7 +107,7 @@ def adds_only(tool, tool_input, path):
 
 def zone_decision(path, tool, tool_input):
     """(decision, reason, kind) when path is inside a knowledge zone, otherwise None."""
-    for root, rules, history in ((KDRIVE, KDRIVE_RULES, KDRIVE_HISTORY), (OS_ROOT, OS_RULES, None)):
+    for root, rules in ((KDRIVE, KDRIVE_RULES), (OS_ROOT, OS_RULES)):
         if not under(path, root) or path == root:
             continue
         rel = os.path.relpath(path, root)
@@ -120,10 +120,8 @@ def zone_decision(path, tool, tool_input):
             return "allow", "a new file in a zone that takes new files; nothing existing is lost.", kind
         if kind == "new":
             return "ask", "this file already exists, and this zone takes new files only.", kind
-        # kind == "add": a living guide
-        git_args = ["git", "--git-dir", history, "--work-tree", root] if history else ["git", "-C", root]
-        if history and not os.path.isdir(history):
-            return "ask", "the history of this file is not held, so a change could not be undone.", kind
+        # kind == "add": a living guide, which must sit in a git repository (a root without one always asks)
+        git_args = ["git", "-C", root]
         if subprocess.run(git_args + ["ls-files", "--error-unmatch", "--", rel], capture_output=True, timeout=5).returncode != 0:
             return "ask", "git does not hold this file yet, so a change could not be undone.", kind
         if subprocess.run(git_args + ["status", "--porcelain", "--", rel], capture_output=True, text=True, timeout=5).stdout.strip():

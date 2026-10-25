@@ -108,7 +108,6 @@ class ZoneGuard(unittest.TestCase):
         cls.tmp = tempfile.TemporaryDirectory()
         base = os.path.realpath(cls.tmp.name)
         cls.kd = os.path.join(base, "kdrive")
-        cls.hist = os.path.join(base, "history.git")
         cls.os_root = os.path.join(base, "claude-os")
         cls.log = os.path.join(base, "state", "zone-decisions.jsonl")
         cls.ci = os.path.join(cls.kd, "Knowledge base", "Code Intelligence.md")
@@ -119,11 +118,6 @@ class ZoneGuard(unittest.TestCase):
         put(os.path.join(cls.kd, "Obsidian", "Watts Obsidian", "Areas", "note.md"), "note\n")
         put(os.path.join(cls.kd, "Claude outputs", "report.md"), "report\n")
         put(os.path.join(cls.kd, "Claude Cowork OS", "instructions.md"), "frozen\n")
-        sh(base, "git", "init", "-q", "--bare", cls.hist)
-        hist = ["git", "--git-dir", cls.hist, "--work-tree", cls.kd]
-        sh(base, *hist, "config", "commit.gpgsign", "false")
-        sh(base, *hist, "add", "Knowledge base/Code Intelligence.md")
-        sh(base, *hist, "commit", "-q", "-m", "baseline")
         os.makedirs(cls.os_root)
         sh(cls.os_root, "git", "init", "-q")
         sh(cls.os_root, "git", "config", "commit.gpgsign", "false")
@@ -139,7 +133,7 @@ class ZoneGuard(unittest.TestCase):
 
     def env(self, **extra):
         env = dict(os.environ, WORKSHOP_GUARD_ROOT=os.path.join(self.tmp.name, "workshop"), KDRIVE_GUARD_ROOT=self.kd,
-                   KDRIVE_GUARD_HISTORY=self.hist, OS_GUARD_ROOT=self.os_root, ZONE_LOG=self.log)
+                   OS_GUARD_ROOT=self.os_root, ZONE_LOG=self.log)
         env.update(extra)
         return env
 
@@ -178,33 +172,36 @@ class ZoneGuard(unittest.TestCase):
         self.assertEqual(self.ask(os.path.join(self.kd, "Projects", "p", "new.md"), content="x"), "ask")
         self.assertEqual(self.ask(self.kd + "/.." * 30 + "/etc/outside.md", content="x"), "ask")
 
-    # Boundary guides: additions only, history held, nothing uncommitted.
+    # Living guides in the OS repository: additions only, git holds the file, nothing uncommitted.
+    def mem(self):
+        return os.path.join(self.os_root, "Memory.md")
+
     def test_adding_an_entry_to_a_living_guide_is_allowed(self):
-        self.assertEqual(self.ask(self.ci, "Edit", old_string="line2\n", new_string="line2\nnew entry\n"), "allow")
-        self.assertEqual(self.ask(self.ci, "Write", content="line1\nline2\nappended\n"), "allow")
+        self.assertEqual(self.ask(self.mem(), "Edit", old_string="b\n", new_string="b\nnew entry\n"), "allow")
+        self.assertEqual(self.ask(self.mem(), "Write", content="a\nb\nappended\n"), "allow")
 
     def test_revising_or_removing_existing_guide_text_asks(self):
-        self.assertEqual(self.ask(self.ci, "Edit", old_string="line1", new_string="changed"), "ask")
-        self.assertEqual(self.ask(self.ci, "Edit", old_string="line1\n", new_string=""), "ask")
-        self.assertEqual(self.ask(self.ci, "Write", content="something else\n"), "ask")
+        self.assertEqual(self.ask(self.mem(), "Edit", old_string="a", new_string="z"), "ask")
+        self.assertEqual(self.ask(self.mem(), "Edit", old_string="a\n", new_string=""), "ask")
+        self.assertEqual(self.ask(self.mem(), "Write", content="something else\n"), "ask")
 
     def test_a_multi_edit_is_allowed_only_if_every_edit_adds(self):
-        add = {"old_string": "line2\n", "new_string": "line2\nmore\n"}
-        revise = {"old_string": "line1", "new_string": "X"}
-        self.assertEqual(self.ask(self.ci, "MultiEdit", edits=[add]), "allow")
-        self.assertEqual(self.ask(self.ci, "MultiEdit", edits=[add, revise]), "ask")
+        add = {"old_string": "b\n", "new_string": "b\nmore\n"}
+        revise = {"old_string": "a", "new_string": "X"}
+        self.assertEqual(self.ask(self.mem(), "MultiEdit", edits=[add]), "allow")
+        self.assertEqual(self.ask(self.mem(), "MultiEdit", edits=[add, revise]), "ask")
 
     def test_a_guide_with_uncommitted_changes_asks(self):
-        original = open(self.ci).read()
+        original = open(self.mem()).read()
         try:
-            put(self.ci, original + "uncommitted\n")
-            self.assertEqual(self.ask(self.ci, "Edit", old_string="line2\n", new_string="line2\nx\n"), "ask")
+            put(self.mem(), original + "uncommitted\n")
+            self.assertEqual(self.ask(self.mem(), "Edit", old_string="b\n", new_string="b\nx\n"), "ask")
         finally:
-            put(self.ci, original)
+            put(self.mem(), original)
 
-    def test_a_guide_whose_history_is_not_held_asks(self):
-        env = self.env(KDRIVE_GUARD_HISTORY=os.path.join(self.tmp.name, "no-such-history.git"))
-        self.assertEqual(self.ask(self.ci, "Edit", env=env, old_string="line2\n", new_string="line2\nx\n"), "ask")
+    def test_the_library_takes_no_edits_to_existing_files_not_even_additions(self):
+        self.assertEqual(self.ask(self.ci, "Edit", old_string="line2\n", new_string="line2\nnew entry\n"), "ask")
+        self.assertEqual(self.ask(self.ci, "Write", content="line1\nline2\nappended\n"), "ask")
 
     # The OS repository: hard rules and core guides ask; living guides take additions.
     def test_the_hard_rules_and_core_guides_in_the_os_repository_ask(self):
