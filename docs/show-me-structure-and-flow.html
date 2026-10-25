@@ -80,7 +80,7 @@
   </div>
 
   <h2>1 · The territories</h2>
-  <p class="note">Two kinds of place. Git holds everything a session follows. The library holds what Thomas keeps.</p>
+  <p class="note">Two kinds of place. Git holds everything a session follows. The library holds what Thomas keeps. kDrive syncs the Windows folders to the laptop; it is outside this design, and whether the vault stays synced is open.</p>
   <div class="band"><b>Always asks, in every territory:</b> deleting or truncating, any external action, secrets, and the files that enforce the rules (hard-rule text, hooks, managed settings, <code>.git/config</code>).</div>
   <div class="grid">
     <section class="card git">
@@ -88,10 +88,10 @@
       <div class="where">/home/thomas/claude-os · git</div>
       <ul>
         <li>Hard rules, instructions, Memory, AboutMe <span class="chip exists">exists</span></li>
-        <li>Skills and handovers <span class="chip exists">exists</span></li>
+        <li>Skills (the procedures) and handovers <span class="chip exists">exists</span></li>
         <li>Code Intelligence and Project Framework, as skills <span class="chip soon">to come</span> <span class="note">(move out of the Knowledge base)</span></li>
         <li>The Difference Engine seed, in <code>docs/</code> <span class="chip soon">to come</span></li>
-        <li>The Path Registry (logical key to location), moved in from the Map of Content <span class="chip soon">to come</span></li>
+        <li><b>Map of Content:</b> the Path Registry, where things are (moved in from the library's map) <span class="chip soon">to come</span></li>
       </ul>
       <div class="write"><b>Write:</b> hard rules ask · core guides proposed first · living guides take additions at once, revisions are proposed</div>
     </section>
@@ -103,6 +103,8 @@
         <li>Guardrails: hooks, <code>zones.json</code>, tests <span class="chip exists">exists</span> <span class="note">(new zone hook not installed yet)</span></li>
         <li>ADR-001 accepted <span class="chip exists">exists</span>; ADR-002 <span class="chip designed">designed</span></li>
         <li><code>tools/check-all.sh</code> <span class="chip exists">exists</span></li>
+        <li><b>Mods</b> (the Workbench pane) <span class="chip exists">exists</span></li>
+        <li><b>Connectors:</b> read all of the Windows PC; write only dated snapshots and new files <span class="chip exists">exists</span></li>
         <li>The Observer <span class="chip soon">to come</span></li>
       </ul>
       <div class="write"><b>Write:</b> <code>guardrails/</code> and <code>CLAUDE.md</code> ask · everything else: edit committed files, create files in the step that commits them</div>
@@ -125,11 +127,20 @@
       <ul>
         <li>Life folders (Car, Family, Finances, House, Legal ...) and <code>Work\</code> <span class="chip exists">exists</span></li>
         <li><b>Code archive:</b> dated snapshots written out of Code <span class="chip designed">designed</span></li>
-        <li>The library map: what is in the library, hand-edited, no registry rows <span class="chip exists">exists</span> <span class="note">(to be reduced to contents)</span></li>
+        <li><b>Library Map:</b> what is in the library, hand-edited, no registry rows <span class="chip exists">exists</span> <span class="note">(today still called Map of Content; Thomas renames it when the edits are done)</span></li>
         <li>Dated index snapshots of the library: the baseline for spotting what changed <span class="chip designed">designed</span></li>
         <li>Holds <b>no logic</b>: nothing a session loads or follows</li>
       </ul>
       <div class="write"><b>Write:</b> new files only. Never overwrite, edit, rename or move an existing file without asking</div>
+    </section>
+
+    <section class="card lib">
+      <h3>Email Sync <span class="chip exists">exists</span></h3>
+      <div class="where">D:\Claude CoWork\Email sync · Infomaniak email</div>
+      <ul>
+        <li>Mail arriving in a Windows folder. Its pipeline (brief, actions, invoices) was built for Cowork <span class="chip soon">to come</span> <span class="note">(W-07)</span></li>
+      </ul>
+      <div class="write"><b>Write:</b> none for now. Read only</div>
     </section>
 
     <section class="card think">
@@ -162,7 +173,7 @@
     <div class="flow g"><span class="arrow">Git → Knowledge base · dated snapshots <span class="chip designed">designed</span></span>One way. A snapshot is a record, not a copy: it carries a header (what, when, which commit, "not authority; the live version is in git") and is never loaded as an instruction.</div>
     <div class="flow"><span class="arrow">Library or vault → git · read, then migrate on purpose</span>Reading informs. Nothing flows into git by itself. Moving a piece of logic is an explicit migration: copy into git, check it matches, then Thomas retires the original in Windows.</div>
     <div class="flow g"><span class="arrow">Project ↔ Workshop ↔ Claude OS · read across, write at home</span>Any session reads any repository. A change is committed in the repository it belongs to, saying where it came from. Only cross-cutting work leaves a handover in the OS.</div>
-    <div class="flow g"><span class="arrow">The Map of Content, split by job <span class="chip designed">designed</span></span>The Path Registry (<i>where</i>) lives in the Claude OS. The library map (<i>what is in it</i>) stays in the library. No row is in both. Dated index snapshots of the library, taken before and after structural changes, show exactly what changed or went missing.</div>
+    <div class="flow g"><span class="arrow">The Map of Content, split by job <span class="chip designed">designed</span></span>The Path Registry (<i>where</i>) lives in the Claude OS as the Map of Content. The library's own map, to be renamed Library Map (<i>what is in it</i>), stays in the library. No row is in both. Dated index snapshots of the library, taken before and after structural changes, show exactly what changed or went missing.</div>
     <div class="flow"><span class="arrow">Why the shell never writes to the library</span>The sandbox mounts the Windows drive read-only, by design. Library writes go through the file editor, which the hook allows only in the zones above.</div>
   </div>
 
