@@ -10,6 +10,7 @@ The machine-wide rules that sit under every Claude Code session on this computer
 | `workshop-push` | The one way to send a project to GitHub from a session: `/etc/claude-code/workshop-push <project>` (a project folder, `workshop` for the platform repository, or `claude-os`). Behind an approval prompt that shows the exact command. A plain `git push` no longer runs in a session: it is not excluded from the sandbox, where the GitHub token is hidden. |
 | `workshop-projects` | Read-only: lists every project (most recently committed first) with its phase and the opening of its newest handover. Run as `/etc/claude-code/workshop-projects` at the start of a session, so the project picker needs no improvised shell loop and no approval prompt. |
 | `test_workshop_guard.py`, `test_workshop_edit_guard.py`, `test_workshop_push.py`, `test_workshop_projects.py` | The tests. Standard library only. |
+| `setup-kdrive-history.sh` | One-time: creates the Knowledge base history store (reads kDrive, writes one git directory in WSL; never overwrites). Run before the zones can allow edits to Code Intelligence. |
 | `install.sh`, `verify-install.sh` | Install into `/etc/claude-code` (sudo, tests first, backs up what it replaces); check that the installed copies match. |
 | `previous-*` | The files from before 2026-09-25, kept as the way back for that change. Git history now does this job. |
 
