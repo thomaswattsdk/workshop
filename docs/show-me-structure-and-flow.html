@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Structure and Flow</title>
+<style>
+  :root {
+    --bg: #f7f6f2; --card: #ffffff; --ink: #1d2428; --muted: #5d6870; --line: #d9d6cc;
+    --git: #2f6f5e; --git-bg: #e4f1ec; --lib: #8a5a1f; --lib-bg: #f6ead6;
+    --think: #5b4b8a; --think-bg: #ebe7f5; --rule: #a23b3b; --rule-bg: #f8e4e2;
+    --ok: #2f6f5e; --design: #9a6a00; --soon: #6b7480;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14181a; --card: #1d2327; --ink: #e8ece9; --muted: #9aa5ab; --line: #333d42;
+      --git: #6fc2a8; --git-bg: #1b2e29; --lib: #e0a860; --lib-bg: #2e2517;
+      --think: #b5a5e6; --think-bg: #272238; --rule: #e58b8b; --rule-bg: #321d1d;
+      --ok: #6fc2a8; --design: #e0b04a; --soon: #8b96a0;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14181a; --card: #1d2327; --ink: #e8ece9; --muted: #9aa5ab; --line: #333d42;
+    --git: #6fc2a8; --git-bg: #1b2e29; --lib: #e0a860; --lib-bg: #2e2517;
+    --think: #b5a5e6; --think-bg: #272238; --rule: #e58b8b; --rule-bg: #321d1d;
+    --ok: #6fc2a8; --design: #e0b04a; --soon: #8b96a0;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 24px 16px 56px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  h2 { font-size: 1.15rem; margin: 36px 0 4px; }
+  p { margin: 6px 0; }
+  .lede, .note { color: var(--muted); }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 14px 0 0; font-size: .9rem; }
+  .chip { display: inline-block; font-size: .72rem; font-weight: 600; letter-spacing: .02em; padding: 1px 8px; border-radius: 99px; border: 1px solid currentColor; white-space: nowrap; vertical-align: 1px; }
+  .exists { color: var(--ok); } .designed { color: var(--design); } .soon { color: var(--soon); border-style: dashed; }
+  .band { background: var(--rule-bg); color: var(--rule); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 12px; margin: 18px 0 12px; font-size: .92rem; }
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); }
+  .card { background: var(--card); border: 1px solid var(--line); border-top: 5px solid var(--c); border-radius: 10px; padding: 12px 14px; }
+  .card.git { --c: var(--git); } .card.lib { --c: var(--lib); } .card.think { --c: var(--think); }
+  .card h3 { margin: 0; font-size: 1.05rem; }
+  .where { font: .8rem/1.3 ui-monospace, Consolas, monospace; color: var(--muted); margin: 2px 0 8px; word-break: break-all; }
+  .card ul { margin: 6px 0 8px; padding-left: 18px; }
+  .card li { margin: 3px 0; font-size: .93rem; }
+  .write { background: var(--bg); border-radius: 6px; padding: 6px 9px; font-size: .88rem; margin-top: 8px; }
+  .write b { color: var(--c); }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; font-size: .92rem; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  th { background: var(--bg); font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  tr:last-child td { border-bottom: 0; }
+  td.n { font-weight: 600; white-space: nowrap; }
+  @media (max-width: 640px) {
+    table, thead, tbody, tr, th, td { display: block; }
+    thead { display: none; }
+    tr { border-bottom: 1px solid var(--line); padding: 6px 0; }
+    td { border: 0; padding: 3px 10px; }
+    td::before { content: attr(data-h) ": "; color: var(--muted); font-size: .78rem; text-transform: uppercase; }
+    td.n::before { content: ""; }
+  }
+  .flows { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin-top: 8px; }
+  .flow { background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--lib); border-radius: 8px; padding: 9px 12px; font-size: .92rem; }
+  .flow.g { border-left-color: var(--git); }
+  .flow .arrow { font-weight: 600; display: block; margin-bottom: 2px; }
+  ol.life { list-style: none; counter-reset: s; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; }
+  ol.life li { counter-increment: s; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px 9px 44px; position: relative; font-size: .93rem; }
+  ol.life li::before { content: counter(s); position: absolute; left: 12px; top: 8px; width: 24px; height: 24px; border-radius: 50%; background: var(--git); color: var(--bg); font-weight: 700; text-align: center; line-height: 24px; font-size: .85rem; }
+  ol.life li + li::after { content: ""; }
+  .foot { margin-top: 28px; font-size: .86rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Structure and Flow</h1>
+  <p class="lede">How the Knowledge base, the Claude OS, the Workshop and the Projects relate, and who may read and write what. This is the shape as understood on 2026-10-25, after the corrections: <b>logic lives in git; the library holds records.</b> Basis: ADR-002 (proposed) and the Difference Engine.</p>
+  <div class="legend">
+    <span><span class="chip exists">exists</span> built and in use</span>
+    <span><span class="chip designed">designed</span> decided or built, not yet live</span>
+    <span><span class="chip soon">to come</span> not started</span>
+  </div>
+
+  <h2>1 · The territories</h2>
+  <p class="note">Two kinds of place. Git holds everything a session follows. The library holds what Thomas keeps.</p>
+  <div class="band"><b>Always asks, in every territory:</b> deleting or truncating, any external action, secrets, and the files that enforce the rules (hard-rule text, hooks, managed settings, <code>.git/config</code>).</div>
+  <div class="grid">
+    <section class="card git">
+      <h3>Claude OS <span class="chip exists">exists</span></h3>
+      <div class="where">/home/thomas/claude-os · git</div>
+      <ul>
+        <li>Hard rules, instructions, Memory, AboutMe <span class="chip exists">exists</span></li>
+        <li>Skills and handovers <span class="chip exists">exists</span></li>
+        <li>Code Intelligence and Project Framework, as skills <span class="chip soon">to come</span> <span class="note">(move out of the Knowledge base)</span></li>
+        <li>The Difference Engine seed, in <code>docs/</code> <span class="chip soon">to come</span></li>
+      </ul>
+      <div class="write"><b>Write:</b> hard rules ask · core guides proposed first · living guides take additions at once, revisions are proposed</div>
+    </section>
+
+    <section class="card git">
+      <h3>Workshop <span class="chip exists">exists</span></h3>
+      <div class="where">/home/thomas/workshop · git (the platform)</div>
+      <ul>
+        <li>Guardrails: hooks, <code>zones.json</code>, tests <span class="chip exists">exists</span> <span class="note">(new zone hook not installed yet)</span></li>
+        <li>ADR-001 accepted <span class="chip exists">exists</span>; ADR-002 <span class="chip designed">designed</span></li>
+        <li><code>tools/check-all.sh</code> <span class="chip exists">exists</span></li>
+        <li>The Observer <span class="chip soon">to come</span></li>
+      </ul>
+      <div class="write"><b>Write:</b> <code>guardrails/</code> and <code>CLAUDE.md</code> ask · everything else: edit committed files, create files in the step that commits them</div>
+    </section>
+
+    <section class="card git">
+      <h3>Projects <span class="chip exists">exists</span></h3>
+      <div class="where">/home/thomas/workshop/&lt;project&gt; · one git repository each</div>
+      <ul>
+        <li>Workbench, Work Ecosystem and its Core, Visual Grill Board, Retro, others <span class="chip exists">exists</span></li>
+        <li>Each holds its own code, <code>CLAUDE.md</code>, <code>docs/</code>, ADRs and handovers</li>
+        <li>Older projects still in kDrive <span class="chip soon">to come</span> <span class="note">(W-13)</span></li>
+      </ul>
+      <div class="write"><b>Write:</b> edit committed files, commit each step · work items only through the core · a change that belongs to another project is committed there</div>
+    </section>
+
+    <section class="card lib">
+      <h3>Knowledge base <span class="chip exists">exists</span></h3>
+      <div class="where">D:\Claude CoWork\Knowledge base · the library</div>
+      <ul>
+        <li>Life folders (Car, Family, Finances, House, Legal ...) and <code>Work\</code> <span class="chip exists">exists</span></li>
+        <li><b>Code archive:</b> dated snapshots written out of Code <span class="chip designed">designed</span></li>
+        <li>Holds <b>no logic</b>: nothing a session loads or follows</li>
+      </ul>
+      <div class="write"><b>Write:</b> new files only. Never overwrite, edit, rename or move an existing file without asking</div>
+    </section>
+
+    <section class="card think">
+      <h3>Obsidian vault <span class="chip exists">exists</span></h3>
+      <div class="where">D:\Claude CoWork\Obsidian\Watts Obsidian · the sketchbook</div>
+      <ul>
+        <li>Thomas's notes, the research graph, <code>Inbox</code> <span class="chip exists">exists</span></li>
+        <li>Obsidian edits it live, so the notes are Thomas's</li>
+      </ul>
+      <div class="write"><b>Write:</b> new notes in <code>Inbox</code> only. Existing notes are never edited</div>
+    </section>
+  </div>
+  <p class="note" style="margin-top:10px">Also in the library and not read by any session: the frozen <code>Claude Cowork OS</code> copy. <code>Projects\</code> in kDrive, until each moves into git, asks for every change.</p>
+
+  <h2>2 · Who may do what</h2>
+  <p class="note">A Code session reads everything. Only the writes differ, by layer.</p>
+  <table>
+    <thead><tr><th>Territory</th><th>Read</th><th>Write without asking</th><th>Asks first</th></tr></thead>
+    <tbody>
+      <tr><td class="n" data-h="Territory">Claude OS</td><td data-h="Read">All</td><td data-h="Write without asking">Additions to living guides (skills, Memory, backlog), committed; new handovers</td><td data-h="Asks first">Hard rules, instructions, AboutMe, ADRs; any revision or removal of existing text</td></tr>
+      <tr><td class="n" data-h="Territory">Workshop</td><td data-h="Read">All</td><td data-h="Write without asking">Committed files outside the protected set; new committed files</td><td data-h="Asks first"><code>guardrails/</code>, <code>CLAUDE.md</code>, <code>.git</code>, <code>.claude</code>, <code>.mcp.json</code></td></tr>
+      <tr><td class="n" data-h="Territory">Projects</td><td data-h="Read">All, across projects</td><td data-h="Write without asking">Committed files in the project worked on; new files committed in the same step</td><td data-h="Asks first">Files with uncommitted changes, untracked files, work-item records (core only)</td></tr>
+      <tr><td class="n" data-h="Territory">Knowledge base</td><td data-h="Read">All</td><td data-h="Write without asking">New files, including dated snapshots</td><td data-h="Asks first">Any existing file</td></tr>
+      <tr><td class="n" data-h="Territory">Obsidian vault</td><td data-h="Read">All</td><td data-h="Write without asking">New notes in <code>Inbox</code></td><td data-h="Asks first">Any existing note; new notes outside <code>Inbox</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>3 · What moves between territories</h2>
+  <div class="flows">
+    <div class="flow g"><span class="arrow">Git → Knowledge base · dated snapshots <span class="chip designed">designed</span></span>One way. A snapshot is a record, not a copy: it carries a header (what, when, which commit, "not authority; the live version is in git") and is never loaded as an instruction.</div>
+    <div class="flow"><span class="arrow">Library or vault → git · read, then migrate on purpose</span>Reading informs. Nothing flows into git by itself. Moving a piece of logic is an explicit migration: copy into git, check it matches, then Thomas retires the original in Windows.</div>
+    <div class="flow g"><span class="arrow">Project ↔ Workshop ↔ Claude OS · read across, write at home</span>Any session reads any repository. A change is committed in the repository it belongs to, saying where it came from. Only cross-cutting work leaves a handover in the OS.</div>
+    <div class="flow"><span class="arrow">Why the shell never writes to the library</span>The sandbox mounts the Windows drive read-only, by design. Library writes go through the file editor, which the hook allows only in the zones above.</div>
+  </div>
+
+  <h2>4 · How a lesson gets kept</h2>
+  <p class="note">The Difference Engine's loop, as it will run in Code.</p>
+  <ol class="life">
+    <li><b>Friction in use.</b> A task presses on a guide: it was wrong, missing, or not found. <span class="chip exists">exists</span></li>
+    <li><b>Say which of three outcomes it is:</b> the core is wrong, the router mis-fired, or this is an edge, so the boundary extends. <span class="chip designed">designed</span></li>
+    <li><b>Capture in a git guide.</b> An addition is applied and committed at once; a revision is proposed and waits for Thomas. <span class="chip designed">designed</span></li>
+    <li><b>Listed as "captured, not yet ticked".</b> Thomas ticks it, or reverts it from git. <span class="chip soon">to come</span></li>
+    <li><b>At a milestone, a dated snapshot</b> goes to the Code archive, headed as a record. <span class="chip designed">designed</span></li>
+    <li><b>The Observer checks from outside:</b> it reads the hook's log and git after the session and flags any write outside its zone. <span class="chip soon">to come</span></li>
+  </ol>
+
+  <p class="foot">Source: <code>docs/adr/adr-002-write-zones-by-layer.md</code> (proposed) and the Difference Engine concept seed. Kept current: when a later decision changes this shape, this page is updated in the same session. First version 2026-10-25.</p>
+</main>
+</body>
+</html>
