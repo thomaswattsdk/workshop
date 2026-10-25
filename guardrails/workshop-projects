@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+"""List the workshop's projects for the session picker, most recently committed first. Reads only; changes nothing.
+
+For each project (a folder with its own .git): its name, the date of its last commit, the line of its CLAUDE.md that
+names its phase, and the opening of its newest handover. Run with no arguments: /etc/claude-code/workshop-projects
+(an optional folder argument exists for the tests; a rule that allows the bare command does not allow it).
+"""
+import glob
+import os
+import re
+import subprocess
+import sys
+from datetime import datetime, timezone
+
+WIDTH = 420
+
+
+def last_commit(path):
+    out = subprocess.run(["git", "-C", path, "log", "-1", "--format=%ct"], capture_output=True, text=True, timeout=10)
+    return int(out.stdout.strip()) if out.returncode == 0 and out.stdout.strip() else 0
+
+
+def phase_line(path):
+    try:
+        with open(os.path.join(path, "CLAUDE.md"), encoding="utf-8") as f:
+            for line in f:
+                if re.search(r"\*\*Phase", line, re.I) or re.match(r"\s*[-*]?\s*phase\b", line, re.I):
+                    return clean(line)
+    except OSError:
+        pass
+    return ""
+
+
+def clean(text):
+    text = re.sub(r"[*`>]", "", text).strip(" -\t")
+    text = re.sub(r"\s+", " ", text)
+    return text if len(text) <= WIDTH else text[: WIDTH - 1] + "…"
+
+
+def newest_handover(path):
+    found = glob.glob(os.path.join(path, "docs", "HANDOVER-*.md")) + glob.glob(os.path.join(path, "docs", "handovers", "*.md"))
+    return max(found, key=os.path.basename) if found else None
+
+
+def handover_opening(file):
+    status, opening, in_front = "", "", False
+    with open(file, encoding="utf-8") as f:
+        for n, line in enumerate(f):
+            s = line.strip()
+            if n == 0 and s == "---":
+                in_front = True
+                continue
+            if in_front:
+                if s == "---":
+                    in_front = False
+                elif s.startswith("status:"):
+                    status = s.split(":", 1)[1].strip()
+                continue
+            if s.startswith(">") and len(s) > 2:
+                opening = clean(s)
+                break
+            if not opening and s and not s.startswith("#") and not s.startswith("---"):
+                opening = clean(s)
+    return status, opening
+
+
+def main(argv):
+    root = argv[1] if len(argv) > 1 else os.path.join(os.path.expanduser("~"), "workshop")
+    projects = []
+    for name in sorted(os.listdir(root)):
+        path = os.path.join(root, name)
+        if os.path.isdir(path) and os.path.exists(os.path.join(path, ".git")):
+            projects.append((last_commit(path), name, path))
+    if not projects:
+        print("Nothing here right now")
+        return 0
+    for stamp, name, path in sorted(projects, key=lambda p: (-p[0], p[1])):
+        when = datetime.fromtimestamp(stamp, timezone.utc).strftime("%Y-%m-%d %H:%M") if stamp else "no commits"
+        print(f"== {name}  (last commit {when} UTC)")
+        print(f"phase: {phase_line(path) or 'not stated in CLAUDE.md'}")
+        handover = newest_handover(path)
+        if handover:
+            status, opening = handover_opening(handover)
+            print(f"handover: {os.path.basename(handover)} [{status or 'no status'}]")
+            print(f"opening: {opening or 'none'}")
+        else:
+            print("handover: none")
+        print()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
