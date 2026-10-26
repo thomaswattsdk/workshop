@@ -1,6 +1,6 @@
 # ADR-002: Logic lives in git; the library holds records; write rules follow the Difference Engine's layers
 
-**Status:** Proposed (2026-10-25; revised the same day after Thomas's corrections; becomes Accepted when Thomas approves, and takes effect only when the hook enforces it and the amended rule text is in place)
+**Status:** Accepted (2026-10-26, Thomas). Proposed 2026-10-25 and revised the same day. The hook enforces it and the amended rule text is in place. Tests 1 to 4 pass; Test 5 (the Observer, W-18) is deferred. Still to do: Thomas retires the library originals in Windows; removal of `guardrails/setup-kdrive-history.sh` awaits his permission.
 **Date:** 2026-10-25
 **Deciders:** Thomas, Claude
 **Governing spec:** `Difference Engine - Concept Seed.md` (now in `Projects\Collaboration Framework`, to move into `claude-os/docs/`), tenets 1, 2, 3, 4, 5, 6, 7. Treated as the foundational design for working with the knowledge structure (Thomas, 2026-10-25).
